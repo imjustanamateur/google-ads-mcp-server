@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import OAuth modules after environment is loaded
-from oauth.google_auth import format_customer_id, get_headers_with_auto_token, execute_gaql
+from oauth.google_auth import format_customer_id, get_headers_with_auto_token, execute_gaql  # noqa: E402
 
 # Get environment variables
 GOOGLE_ADS_DEVELOPER_TOKEN = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN")
