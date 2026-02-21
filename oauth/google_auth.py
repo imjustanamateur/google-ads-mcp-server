@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 SCOPES = ['https://www.googleapis.com/auth/adwords']
-API_VERSION = "v19"
+API_VERSION = "v23"
 
 # Environment variables
 GOOGLE_ADS_OAUTH_CONFIG_PATH = os.environ.get("GOOGLE_ADS_OAUTH_CONFIG_PATH")
