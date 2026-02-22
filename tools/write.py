@@ -1114,13 +1114,17 @@ def add_sitelinks(
         asset_url = f"https://googleads.googleapis.com/{API_VERSION}/customers/{formatted_customer_id}/assets:mutate"
         asset_operations = []
         for sl in sitelinks:
-            sitelink_asset = {"linkText": sl['link_text'], "finalUrls": [sl['final_url']]}
+            sitelink_asset = {"linkText": sl['link_text']}
             if sl.get('description1'):
                 sitelink_asset['description1'] = sl['description1']
             if sl.get('description2'):
                 sitelink_asset['description2'] = sl['description2']
             asset_operations.append({
-                "create": {"name": f"Sitelink: {sl['link_text']}", "sitelinkAsset": sitelink_asset}
+                "create": {
+                    "name": f"Sitelink: {sl['link_text']}",
+                    "finalUrls": [sl['final_url']],
+                    "sitelinkAsset": sitelink_asset,
+                }
             })
 
         asset_response = _make_request(requests.post, asset_url, headers, json_body={"operations": asset_operations})
