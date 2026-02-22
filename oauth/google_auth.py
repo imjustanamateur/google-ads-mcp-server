@@ -4,6 +4,7 @@ Google Ads OAuth Authentication - cohnen's approach integrated into tool calls
 
 import os
 import json
+import time
 import requests
 import logging
 from typing import Dict, Any
@@ -116,6 +117,19 @@ def get_oauth_credentials():
     
     return creds
 
+def _make_request(method, url, headers, json_body=None, max_retries=3):
+    """HTTP request with exponential backoff on transient errors (429, 500, 503)."""
+    for attempt in range(max_retries + 1):
+        resp = method(url, headers=headers, json=json_body) if json_body is not None else method(url, headers=headers)
+        if resp.status_code in (429, 500, 503) and attempt < max_retries:
+            wait = 2 ** attempt
+            logger.warning(f"HTTP {resp.status_code} on attempt {attempt + 1}/{max_retries}, retrying in {wait}s...")
+            time.sleep(wait)
+            continue
+        return resp
+    return resp
+
+
 def get_headers_with_auto_token() -> Dict[str, str]:
     """Get API headers with automatically managed token - integrated OAuth."""
     if not GOOGLE_ADS_DEVELOPER_TOKEN:
@@ -133,26 +147,30 @@ def get_headers_with_auto_token() -> Dict[str, str]:
     return headers
 
 def execute_gaql(customer_id: str, query: str, manager_id: str = "") -> Dict[str, Any]:
-    """Execute GAQL using the non-streaming search endpoint."""
-    # This will automatically trigger OAuth if needed
+    """Execute GAQL with automatic pagination and retry."""
     headers = get_headers_with_auto_token()
-    
     formatted_customer_id = format_customer_id(customer_id)
     url = f"https://googleads.googleapis.com/{API_VERSION}/customers/{formatted_customer_id}/googleAds:search"
-    
     if manager_id:
         headers['login-customer-id'] = format_customer_id(manager_id)
 
-    payload = {'query': query}
-    resp = requests.post(url, headers=headers, json=payload)
-    
-    if not resp.ok:
-        raise Exception(f"Error executing GAQL: {resp.status_code} {resp.reason} - {resp.text}")
-    
-    data = resp.json()
-    results = data.get('results', [])
+    all_results = []
+    next_page_token = None
+    while True:
+        payload = {'query': query}
+        if next_page_token:
+            payload['pageToken'] = next_page_token
+        resp = _make_request(requests.post, url, headers, json_body=payload)
+        if not resp.ok:
+            raise Exception(f"Error executing GAQL: {resp.status_code} {resp.reason} - {resp.text}")
+        data = resp.json()
+        all_results.extend(data.get('results', []))
+        next_page_token = data.get('nextPageToken')
+        if not next_page_token:
+            break
+
     return {
-        'results': results,
+        'results': all_results,
         'query': query,
-        'totalRows': len(results),
+        'totalRows': len(all_results),
     }
