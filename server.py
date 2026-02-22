@@ -18,9 +18,21 @@ logger = logging.getLogger('google_ads_server')
 logger.info("Starting Google Ads MCP Server...")
 
 # Import tool modules so their @mcp.tool decorators register on the shared instance
-import tools.accounts  # noqa: F401, E402
-import tools.read      # noqa: F401, E402
-import tools.write     # noqa: F401, E402
+import tools.accounts    # noqa: F401, E402
+import tools.read        # noqa: F401, E402
+import tools.write       # noqa: F401, E402
+import tools.reporting   # noqa: F401, E402
+import tools.conversions  # noqa: F401, E402
+import tools.labels      # noqa: F401, E402
+import tools.account     # noqa: F401, E402
+import tools.utils       # noqa: F401, E402
+import tools.audiences   # noqa: F401, E402
+import tools.assets      # noqa: F401, E402
+import tools.campaigns   # noqa: F401, E402
+import tools.ads         # noqa: F401, E402
+import tools.bids        # noqa: F401, E402
+import tools.pmax        # noqa: F401, E402
+import tools.shopping    # noqa: F401, E402
 
 
 @mcp.resource("gaql://reference")
